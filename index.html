@@ -5,872 +5,691 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#100708">
 <title>Larp Code — Connect</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23dc2626'/%3E%3Cpath d='M38 25 17 50l21 25M62 25l21 25-21 25' fill='none' stroke='white' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23dc2626'/%3E%3Ctext x='50' y='63' text-anchor='middle' font-size='38' fill='white'%3E%3C/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{
-  color-scheme:dark;
-  --bg:#100708;
-  --panel:#190b0e;
-  --panel2:#251015;
-  --border:#432029;
-  --red:#dc2626;
-  --red2:#991b1b;
-  --light:#ff858c;
-  --text:#fff3f3;
-  --muted:#aa8d93;
-  --green:#4ade80;
-}
+:root{color-scheme:dark;--bg:#100708;--panel:#190b0e;--panel2:#251015;--border:#432029;--red:#dc2626;--light:#ff858c;--text:#fff3f3;--muted:#aa8d93;--green:#4ade80}
 *{box-sizing:border-box}
-body{
-  margin:0;min-height:100vh;color:var(--text);
-  font-family:"DM Sans",sans-serif;
-  background:
-    radial-gradient(ellipse at 0 0,#49121b 0,transparent 38%),
-    radial-gradient(ellipse at 100% 25%,#2a0b11 0,transparent 35%),
-    var(--bg);
-}
-button,input{font:inherit}
-button{cursor:pointer}
-button:focus-visible,input:focus-visible{outline:2px solid var(--light);outline-offset:3px}
-button:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
-.app{max-width:1550px;margin:auto;padding:25px}
-header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:26px}
-.brand{display:flex;align-items:center;gap:13px}
-.logo{
-  width:46px;height:46px;display:grid;place-items:center;border-radius:15px;
-  background:linear-gradient(145deg,#ff4545,#8b101b);
-  box-shadow:0 8px 28px #dc262633;font-size:20px;font-weight:800
-}
-.brand-name{font-size:21px;font-weight:800;letter-spacing:-.8px}
-.brand-sub{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:1.6px;text-transform:uppercase}
-.status{display:flex;align-items:center;gap:9px;padding:10px 14px;border:1px solid var(--border);background:#170a0d;border-radius:99px;color:var(--muted);font-size:12px}
-.dot{width:8px;height:8px;border-radius:50%;background:#777}
-.dot.online{background:var(--green);box-shadow:0 0 10px #4ade8088}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 325px;gap:22px}
-.main{min-width:0}
-.panel{border:1px solid var(--border);background:#190b0ef0;border-radius:20px;overflow:hidden;box-shadow:0 15px 45px #0002}
-.setup{padding:23px;margin-bottom:20px;position:relative}
-.setup:before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,#dc2626,transparent)}
-.eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--light);font-weight:800;margin-bottom:9px}
-.section-title{font-size:19px;font-weight:800;margin:0 0 8px;letter-spacing:-.5px}
-.description{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 20px;max-width:650px}
-.form-row{display:flex;gap:10px}
-input{width:100%;min-width:0;padding:13px 14px;background:#100709;border:1px solid var(--border);border-radius:12px;color:var(--text)}
-input:focus{border-color:#a52a39;outline:none}
-input::placeholder{color:#76565d}
-.btn{padding:12px 15px;border:1px solid var(--border);border-radius:12px;background:#281116;color:var(--text);font-weight:700;white-space:nowrap;transition:all .18s}
-.btn:hover{background:#3a171f;border-color:#74303b;transform:translateY(-1px)}
-.btn.primary{background:linear-gradient(135deg,#ef4444,#a31120);border-color:#dc2626;box-shadow:0 5px 18px #dc262622}
-.btn.primary:hover{background:linear-gradient(135deg,#ff5555,#bd1426)}
-.room-info{display:none;margin-top:16px;padding:15px;border:1px solid var(--border);background:#100709;border-radius:14px}
-.room-info.visible{display:block}
-.room-label{font-size:11px;color:var(--muted);margin-bottom:9px}
-.room-code-row{display:flex;gap:9px}
-.room-code{flex:1;min-width:0;overflow-wrap:anywhere;padding:11px 12px;border-radius:9px;background:#1b0c10;border:1px solid var(--border);font-size:12px;color:#ffb0b7}
-.name-edit{display:flex;gap:9px;margin-top:14px}
-.name-edit input{padding:10px 12px;font-size:12px}
-.name-edit .btn{font-size:12px;padding:10px 13px}
-.video-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:17px}
-.video-card{position:relative;min-width:0;aspect-ratio:16/10;overflow:hidden;background:#090507;border:1px solid #4a1d26;border-radius:19px;cursor:zoom-in;isolation:isolate}
-.video-card video{display:block;width:100%;height:100%;object-fit:contain;background:#080507}
-video.mirror{transform:scaleX(-1)}
-.video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:radial-gradient(circle at 50% 40%,#38131b,#100709 72%);color:var(--muted);font-size:12px;text-align:center;padding:15px}
-.avatar{width:66px;height:66px;display:grid;place-items:center;border-radius:22px;font-size:22px;font-weight:800;color:white;background:linear-gradient(145deg,#ef4444,#70121e);box-shadow:0 8px 35px #dc262633}
-.video-name{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:8px 11px;border:1px solid #ffffff13;border-radius:9px;background:#100709df;backdrop-filter:blur(10px);font-size:11px;pointer-events:none}
-.live-tag{position:absolute;top:12px;left:12px;padding:6px 9px;border:1px solid #ffffff13;border-radius:7px;background:#100709df;font-size:9px;letter-spacing:1px;color:#ffc5c9;pointer-events:none}
-.theater-hint{position:absolute;right:12px;top:12px;padding:6px 9px;border-radius:7px;background:#100709c9;color:#ffb8bf;font-size:10px;opacity:.8;pointer-events:none}
-.quality-bar{
-  position:absolute;right:10px;bottom:10px;display:flex;align-items:center;gap:5px;
-  padding:5px;background:#100709ed;border:1px solid #58222b;border-radius:11px;
-  z-index:4;cursor:default;box-shadow:0 5px 18px #0005;
-}
-.quality-arrow{
-  display:grid;place-items:center;width:29px;height:29px;border:1px solid #51202a;
-  border-radius:7px;background:#291016;color:#fff;font-size:17px;line-height:1;
-}
-.quality-arrow:hover{background:#681a26;border-color:#d63b4c}
-.quality-label{min-width:70px;text-align:center;font-size:10px;font-weight:800;color:#ffb9c0}
-.quality-caption{position:absolute;right:10px;bottom:51px;background:#100709d9;padding:5px 8px;border-radius:6px;font-size:9px;color:#d6aeb4;pointer-events:none}
-.controls{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px;padding:17px 10px;border:1px solid var(--border);background:#190b0e;border-radius:18px}
-.control{min-width:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:9px 10px;background:transparent;color:var(--text);border:1px solid transparent;border-radius:13px;font-size:10px}
-.control:hover{background:#2a1218}
-.control .symbol{width:44px;height:44px;display:grid;place-items:center;background:#2a1419;border:1px solid #442029;border-radius:14px;font-size:19px}
-.control.active .symbol{background:#4b151e;border-color:#8f2634}
-.control.off .symbol{background:#5a171e;border-color:#b92b3a}
-.control.end .symbol{background:#dc2626;border-color:#f04452}
-.sidebar{display:flex;flex-direction:column;gap:19px;min-width:0}
-.side-head{display:flex;align-items:center;justify-content:space-between;padding:18px;border-bottom:1px solid var(--border)}
-.side-head h2{margin:0;font-size:13px;font-weight:800}
-.count{padding:5px 9px;background:#35151d;border:1px solid #54202a;color:#ffafb6;border-radius:7px;font-size:10px}
-.participant{display:flex;align-items:center;gap:11px;padding:15px 18px}
-.small-avatar{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:#37151d;border:1px solid #56212b;color:#ffb7be;font-size:12px;font-weight:800}
-.participant-name{font-size:12px;font-weight:700}
-.participant-state{margin-top:5px;color:var(--muted);font-size:10px}
-.chat-panel{display:flex;flex-direction:column;min-height:350px;flex:1}
-.messages{display:flex;flex-direction:column;gap:12px;padding:15px;overflow-y:auto;min-height:180px;max-height:390px;flex:1}
-.empty-chat{color:var(--muted);font-size:12px;line-height:1.8;text-align:center;margin:auto;padding:18px}
-.message{max-width:94%;align-self:flex-start}
-.message.mine{align-self:flex-end}
-.message-meta{color:var(--muted);font-size:10px;margin:0 4px 5px}
-.bubble{background:#2b141a;border:1px solid #48202a;border-radius:12px 12px 12px 4px;padding:10px 12px;font-size:12px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
-.message.mine .bubble{background:#741b28;border-color:#a92b3b;border-radius:12px 12px 4px 12px}
-.chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
-.chat-form input{padding:11px 12px;font-size:12px}
-.chat-form .btn{padding:10px 12px;font-size:12px}
-.notice{display:none;padding:13px 15px;margin-bottom:16px;border-radius:12px;background:#2a1b10;border:1px solid #72502a;color:#ffd9a4;font-size:12px;line-height:1.6}
-.notice.show{display:block}
-.notice.error{background:#341218;border-color:#842532;color:#ffb8c0}
-.footer{text-align:center;color:#75545c;font-size:10px;padding:24px 0 8px;letter-spacing:.3px}
-
-/* Modo teatro */
-body.theater-open{overflow:hidden}
-.theater{
-  position:fixed;inset:0;z-index:1000;background:#050304f5;
-  display:none;flex-direction:column;padding:18px;gap:12px;
-}
-.theater.open{display:flex}
-.theater-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.theater-title{font-size:13px;font-weight:800}
-.theater-subtitle{font-size:11px;color:var(--muted);margin-top:4px}
-.theater-close{border:1px solid #55212a;background:#251015;color:white;border-radius:10px;padding:10px 14px}
-.theater-video-wrap{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;border:1px solid #401b23;border-radius:16px;overflow:hidden;background:#050304}
-.theater-video-wrap video{width:100%;height:100%;object-fit:contain;background:#050304}
-.theater-video-wrap .video-placeholder{position:absolute}
-.theater-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:11px}
-.theater-quality{display:flex;align-items:center;gap:7px}
-.theater-quality .quality-label{min-width:84px}
-.theater-quality button{width:34px;height:34px;border:1px solid #58222b;background:#251015;color:white;border-radius:8px;font-size:18px}
-.theater-quality button:hover{background:#681a26}
-.theater-quality button:disabled{opacity:.4}
-.theater-wrap-name{position:absolute;left:14px;bottom:14px;padding:8px 11px;border-radius:8px;background:#100709d9;font-size:12px;pointer-events:none}
-@media(max-width:950px){
- .layout{grid-template-columns:1fr}
- .sidebar{display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
- .chat-panel{min-height:350px}
-}
-@media(max-width:620px){
- .app{padding:13px}
- header{margin-bottom:19px}
- .brand-name{font-size:18px}
- .brand-sub{font-size:9px;letter-spacing:1px}
- .status{font-size:10px;padding:8px 10px}
- .setup{padding:17px}
- .form-row{display:grid;grid-template-columns:1fr}
- .video-grid{grid-template-columns:1fr}
- .video-card{aspect-ratio:16/10}
- .sidebar{display:flex}
- .controls{gap:2px;padding:9px 3px}
- .control{min-width:64px;padding:8px 4px}
- .control .symbol{width:39px;height:39px}
- .room-code-row{flex-direction:column}
- .section-title{font-size:17px}
- .theater{padding:10px}
- .theater-video-wrap{border-radius:10px}
- .quality-bar{right:7px;bottom:7px}
- .quality-caption{right:7px;bottom:47px}
-}
+body{margin:0;min-height:100vh;color:var(--text);font-family:"DM Sans",sans-serif;background:radial-gradient(ellipse at 0 0,#49121b,transparent 38%),radial-gradient(ellipse at 100% 25%,#2a0b11,transparent 35%),var(--bg)}
+button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}
+.app{max-width:1400px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#ff4545,#8b101b);font-size:20px;font-weight:800}
+.brand-name{font-size:21px;font-weight:800;letter-spacing:-.8px}.brand-sub{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:1.6px;text-transform:uppercase}
+.status{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border);background:#170a0d;border-radius:99px;color:var(--muted);font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:#777}.dot.online{background:var(--green)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px}
+.panel{border:1px solid var(--border);background:#190b0ef0;border-radius:18px;overflow:hidden;margin-bottom:18px}
+.pad{padding:22px}.eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--light);font-weight:800;margin-bottom:9px}
+h1,h2,h3,p{margin-top:0}.section-title{font-size:19px;margin-bottom:8px}.description{color:var(--muted);font-size:13px;line-height:1.7}
+input{width:100%;min-width:0;padding:12px 13px;background:#100709;border:1px solid var(--border);border-radius:10px;color:var(--text);margin:4px 0}
+input:focus{outline:1px solid var(--light)}input::placeholder{color:#76565d}
+.btn{padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:#281116;color:var(--text);font-weight:700}
+.btn:hover{background:#3a171f}.primary{background:linear-gradient(135deg,#ef4444,#a31120);border-color:#dc2626}
+.row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}.row input{flex:1}
+.hidden{display:none!important}
+.notice{display:none;padding:12px 14px;margin-bottom:15px;border-radius:10px;background:#2a1b10;border:1px solid #72502a;color:#ffd9a4;font-size:12px;line-height:1.6}
+.notice.show{display:block}.notice.error{background:#341218;border-color:#842532;color:#ffb8c0}
+.side-head{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border)}
+.side-head h2{margin:0;font-size:13px}.count{padding:4px 8px;background:#35151d;border:1px solid #54202a;color:#ffafb6;border-radius:7px;font-size:10px}
+.tabs{display:flex;gap:6px;margin-bottom:16px}.tab{flex:1;padding:10px 6px;border:1px solid var(--border);background:#1b0c10;color:var(--muted);border-radius:9px;font-size:12px}.tab.active{color:white;background:#5c1823;border-color:#a52a39}
+.list{display:flex;flex-direction:column;gap:8px}.item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--border);border-radius:12px;background:#14090c}
+.item-main{flex:1;min-width:0}.item-name{font-size:12px;font-weight:800;overflow-wrap:anywhere}.item-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.avatar{width:39px;height:39px;flex-shrink:0;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#ef4444,#70121e);font-size:12px;font-weight:800}
+.small-btn{padding:8px 9px;font-size:11px}.empty{color:var(--muted);font-size:12px;line-height:1.7;text-align:center;padding:20px}
+.chat{display:flex;flex-direction:column;min-height:480px}.chat-title{display:flex;align-items:center;justify-content:space-between;padding:15px;border-bottom:1px solid var(--border)}
+.chat-title strong{font-size:13px}.messages{display:flex;flex-direction:column;gap:10px;padding:15px;overflow:auto;min-height:300px;max-height:52vh;flex:1}
+.message{max-width:88%;align-self:flex-start}.message.mine{align-self:flex-end}
+.meta{font-size:10px;color:var(--muted);margin:0 4px 5px}
+.bubble{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.55;padding:10px 12px;background:#2b141a;border:1px solid #48202a;border-radius:12px 12px 12px 4px}
+.mine .bubble{background:#741b28;border-color:#a92b3b;border-radius:12px 12px 4px 12px}
+.chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}.chat-form input{margin:0;font-size:12px}
+.callbox{padding:15px}.call-status{font-size:12px;color:var(--muted);margin-bottom:12px}
+.videos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.video-card{position:relative;background:#080507;border:1px solid var(--border);border-radius:13px;overflow:hidden;aspect-ratio:16/10}
+.video-card video{width:100%;height:100%;object-fit:contain}
+.video-label{position:absolute;bottom:8px;left:8px;padding:5px 8px;border-radius:7px;background:#100709dd;font-size:10px}
+.video-placeholder{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:11px;text-align:center;padding:8px}
+.call-controls{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.call-controls .btn{flex:1;font-size:11px;padding:10px 7px}
+.danger{background:#751b27;border-color:#aa2838}
+.footer{text-align:center;color:#75545c;font-size:10px;padding:15px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{display:flex;flex-direction:column}.chat{min-height:400px}}
+@media(max-width:550px){.app{padding:12px}.brand-name{font-size:18px}.status{font-size:10px}.pad{padding:16px}.row.wrap{flex-wrap:wrap}.videos{grid-template-columns:1fr 1fr}.chat{min-height:420px}}
 </style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <div class="brand">
-      <div class="logo">&lt;/&gt;</div>
-      <div>
-        <div class="brand-name">larp code</div>
-        <div class="brand-sub">private connection</div>
-      </div>
-    </div>
-    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Desconectado</span></div>
-  </header>
+<header>
+  <div class="brand"><div class="logo">&lt;/&gt;</div><div><div class="brand-name">larp code</div><div class="brand-sub">private connection</div></div></div>
+  <div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Desconectado</span></div>
+</header>
 
-  <div class="notice" id="notice" role="status"></div>
+<div id="notice" class="notice" role="status"></div>
+
+<section id="authPanel" class="panel pad">
+  <div class="eyebrow">◆ sua conta</div>
+  <h1 class="section-title">Entre na sua conexão.</h1>
+  <p class="description">Crie sua conta ou entre para conversar em particular com seus amigos.</p>
+  <div class="tabs"><button id="loginTab" class="tab active">Entrar</button><button id="signupTab" class="tab">Criar conta</button></div>
+  <form id="authForm">
+    <div id="usernameWrap" class="hidden"><label for="usernameInput">Nome de usuário único</label><input id="usernameInput" placeholder="ex.: joni_dev" minlength="3" maxlength="24" autocomplete="username"></div>
+    <label for="emailInput">E-mail</label><input id="emailInput" type="email" placeholder="seu@email.com" required autocomplete="email">
+    <label for="passwordInput">Senha</label><input id="passwordInput" type="password" placeholder="Mínimo de 6 caracteres" minlength="6" required autocomplete="current-password">
+    <button class="btn primary" id="authSubmit" type="submit">Entrar</button>
+  </form>
+</section>
+
+<div id="mainApp" class="hidden">
+  <section class="panel pad">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap">
+      <div><div class="eyebrow">◆ conectado</div><h1 class="section-title" id="welcomeTitle">Olá!</h1><p class="description" id="profileLine"></p></div>
+      <button id="logoutBtn" class="btn">Sair da conta</button>
+    </div>
+  </section>
 
   <div class="layout">
-    <main class="main">
-      <section class="panel setup">
-        <div class="eyebrow">◆ área de conexão</div>
-        <h1 class="section-title">Sua sala, suas regras.</h1>
-        <p class="description">Crie uma sala e compartilhe o convite. Converse com áudio, vídeo, transmissão de tela e chat em um só lugar.</p>
-        <div class="form-row">
-          <button class="btn primary" id="createBtn">＋ Criar sala</button>
-          <input id="roomInput" placeholder="Código ou link de convite" autocomplete="off">
-          <button class="btn" id="joinBtn">Entrar na sala ↗</button>
-        </div>
-        <div class="room-info" id="roomInfo">
-          <div class="room-label">LINK DE CONVITE · ENVIE PARA SEU AMIGO</div>
-          <div class="room-code-row">
-            <div class="room-code" id="inviteText">Aguardando sala...</div>
-            <button class="btn primary" id="copyBtn">Copiar link</button>
-          </div>
-        </div>
-        <div class="name-edit">
-          <input id="nameInput" maxlength="32" placeholder="Como você quer aparecer?" aria-label="Seu nome">
-          <button class="btn" id="saveNameBtn">Salvar nome</button>
-        </div>
-      </section>
-
-      <div class="video-grid">
-        <div class="video-card" id="localCard" title="Clique para ampliar">
-          <video id="localVideo" class="mirror" autoplay playsinline muted></video>
-          <div class="video-placeholder" id="localPlaceholder">
-            <div class="avatar" id="localAvatar">J</div><span>Sua câmera está desligada</span>
-          </div>
-          <div class="live-tag">VOCÊ</div>
-          <div class="theater-hint">⛶ Ampliar</div>
-          <div class="video-name" id="localVideoName">Você</div>
-        </div>
-
-        <div class="video-card" id="remoteCard" title="Clique para abrir o modo teatro">
-          <video id="remoteVideo" autoplay playsinline></video>
-          <div class="video-placeholder" id="remotePlaceholder">
-            <div class="avatar" id="remoteAvatar">?</div><span id="remotePlaceholderText">Esperando alguém entrar...</span>
-          </div>
-          <div class="live-tag" id="remoteLiveTag">OFFLINE</div>
-          <div class="theater-hint">⛶ Modo teatro</div>
-          <div class="video-name" id="remoteVideoName">Participante</div>
-          <div class="quality-caption">QUALIDADE DA TRANSMISSÃO</div>
-          <div class="quality-bar" id="qualityBar">
-            <button class="quality-arrow" id="qualityDown" type="button" aria-label="Diminuir qualidade" title="Diminuir qualidade">‹</button>
-            <span class="quality-label" id="qualityLabel">1080p · 60</span>
-            <button class="quality-arrow" id="qualityUp" type="button" aria-label="Aumentar qualidade" title="Aumentar qualidade">›</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button class="control active" id="micBtn" disabled><span class="symbol">🎙️</span><span id="micLabel">Microfone</span></button>
-        <button class="control active" id="cameraBtn" disabled><span class="symbol">📷</span><span id="cameraLabel">Câmera</span></button>
-        <button class="control" id="screenBtn" disabled><span class="symbol">🖥️</span><span id="screenLabel">Compartilhar tela</span></button>
-        <button class="control" id="copyInviteBtn" disabled><span class="symbol">🔗</span><span>Convidar amigo</span></button>
-        <button class="control end" id="leaveBtn" disabled><span class="symbol">📞</span><span>Encerrar</span></button>
-      </div>
-      <div class="footer">LARP CODE · WEBRTC · VIDEO CALL</div>
-    </main>
-
     <aside class="sidebar">
-      <section class="panel">
-        <div class="side-head"><h2>Na chamada</h2><span class="count" id="participantCount">1 / 2</span></div>
-        <div class="participant">
-          <div class="small-avatar" id="localSmallAvatar">J</div>
-          <div><div class="participant-name" id="localParticipantName">Você</div><div class="participant-state" id="localParticipantState">Ainda não entrou na chamada</div></div>
-        </div>
-        <div class="participant" id="remoteParticipant" style="display:none">
-          <div class="small-avatar" id="remoteSmallAvatar">?</div>
-          <div><div class="participant-name" id="remoteParticipantName">Participante</div><div class="participant-state" id="remoteParticipantState">Conectando...</div></div>
-        </div>
+      <section class="panel pad">
+        <div class="eyebrow">◆ encontrar pessoas</div>
+        <h2 class="section-title">Adicionar amigo</h2>
+        <p class="description">Pesquise pelo nome de usuário exato.</p>
+        <form id="searchForm" class="row"><input id="searchInput" placeholder="nome_de_usuario" maxlength="24" required><button class="btn primary" type="submit">Buscar</button></form>
+        <div id="searchResults" class="list"></div>
       </section>
-
-      <section class="panel chat-panel">
-        <div class="side-head"><h2>Mensagens</h2><span class="count">LIVE CHAT</span></div>
-        <div class="messages" id="messages" aria-live="polite">
-          <div class="empty-chat" id="emptyChat">Suas mensagens aparecem aqui.<br>Entre em uma sala para conversar.</div>
-        </div>
-        <form class="chat-form" id="chatForm">
-          <input id="chatInput" maxlength="1000" placeholder="Digite uma mensagem..." autocomplete="off" disabled>
-          <button class="btn primary" type="submit" id="sendBtn" disabled>➤</button>
-        </form>
+      <section class="panel">
+        <div class="side-head"><h2>Solicitações recebidas</h2><span class="count" id="requestCount">0</span></div>
+        <div class="pad"><div id="requestsList" class="list"><div class="empty">Nenhuma solicitação.</div></div></div>
+      </section>
+      <section class="panel">
+        <div class="side-head"><h2>Seus amigos</h2><span class="count" id="friendCount">0</span></div>
+        <div class="pad"><div id="friendsList" class="list"><div class="empty">Adicione seu primeiro amigo.</div></div></div>
       </section>
     </aside>
+
+    <main>
+      <section class="panel chat">
+        <div class="chat-title"><div><strong id="chatTitle">Mensagens privadas</strong><div class="item-sub" id="chatSubtitle">Selecione um amigo para conversar.</div></div><button id="refreshBtn" class="btn small-btn">Atualizar</button></div>
+        <div class="messages" id="messages"><div class="empty">Suas conversas aparecerão aqui.<br>Selecione um amigo na lista.</div></div>
+        <form class="chat-form" id="chatForm"><input id="chatInput" maxlength="1000" placeholder="Selecione um amigo..." disabled><button id="sendBtn" class="btn primary" disabled>➤</button></form>
+      </section>
+
+      <section class="panel callbox">
+        <div class="eyebrow">◆ chamada privada</div>
+        <h2 class="section-title">Áudio, vídeo e tela</h2>
+        <p class="description">Selecione um amigo e inicie uma chamada. A outra pessoa precisa estar com o Larp Code aberto e conectada.</p>
+        <div class="call-status" id="callStatus">Nenhuma chamada ativa.</div>
+        <div class="videos">
+          <div class="video-card"><video id="localVideo" autoplay playsinline muted></video><div id="localPlaceholder" class="video-placeholder">Sua câmera<br>desligada</div><div class="video-label">Você</div></div>
+          <div class="video-card"><video id="remoteVideo" autoplay playsinline></video><div id="remotePlaceholder" class="video-placeholder">Aguardando<br>participante</div><div class="video-label" id="remoteLabel">Amigo</div></div>
+        </div>
+        <div class="call-controls">
+          <button id="callBtn" class="btn primary" disabled>📞 Ligar</button>
+          <button id="micBtn" class="btn" disabled>🎙️ Microfone</button>
+          <button id="cameraBtn" class="btn" disabled>📷 Câmera</button>
+          <button id="screenBtn" class="btn" disabled>🖥️ Compartilhar tela</button>
+          <button id="hangupBtn" class="btn danger" disabled>Encerrar</button>
+        </div>
+      </section>
+    </main>
   </div>
 </div>
-
-<!-- Visualização ampliada -->
-<div class="theater" id="theater" role="dialog" aria-modal="true" aria-label="Modo teatro">
-  <div class="theater-header">
-    <div>
-      <div class="theater-title" id="theaterTitle">Transmissão</div>
-      <div class="theater-subtitle">Modo teatro · clique em fechar ou pressione Esc para sair</div>
-    </div>
-    <button class="theater-close" id="theaterClose">✕ Fechar</button>
-  </div>
-  <div class="theater-video-wrap" id="theaterVideoWrap">
-    <video id="theaterVideo" autoplay playsinline></video>
-    <div class="video-placeholder" id="theaterPlaceholder">
-      <div class="avatar" id="theaterAvatar">?</div>
-      <span id="theaterPlaceholderText">Vídeo indisponível</span>
-    </div>
-    <div class="theater-wrap-name" id="theaterName">Participante</div>
-  </div>
-  <div class="theater-footer">
-    <span id="theaterDescription">A qualidade depende da câmera, da conexão e do navegador.</span>
-    <div class="theater-quality">
-      <button id="theaterQualityDown" aria-label="Diminuir qualidade">‹</button>
-      <span class="quality-label" id="theaterQualityLabel">1080p · 60</span>
-      <button id="theaterQualityUp" aria-label="Aumentar qualidade">›</button>
-    </div>
-  </div>
+<div class="footer">LARP CODE · PRIVATE CONNECTION</div>
 </div>
 
 <script>
 (() => {
 "use strict";
+
+/* Use somente a chave pública do Supabase no navegador. */
+const SUPABASE_URL = "https://auayiejqozvtusyeucqy.supabase.co";
+const SUPABASE_PUBLIC_KEY = "sb_publishable_ne-lJXWQqNpMeBKWEbxKhQ_zm3vmEuz";
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY);
 const $ = id => document.getElementById(id);
 
-const PRESETS = [
-  {width:1280,height:720,fps:30,label:"720p · 30",bitrate:1200000},
-  {width:1280,height:720,fps:60,label:"720p · 60",bitrate:2200000},
-  {width:1920,height:1080,fps:30,label:"1080p · 30",bitrate:3000000},
-  {width:1920,height:1080,fps:60,label:"1080p · 60",bitrate:5000000}
-];
+let mode = "login";
+let user = null;
+let profile = null;
+let friends = [];
+let activeFriend = null;
+let messagesChannel = null;
+let inboxChannel = null;
+let messageIds = new Set();
+let localStream = null;
+let screenStream = null;
+let pc = null;
+let callChannel = null;
+let activeCallId = null;
+let callInitiator = false;
+let remoteDescriptionSet = false;
+let pendingCandidates = [];
+let micOn = true;
+let cameraOn = true;
+let currentVideoSender = null;
+let currentAudioSender = null;
+let realtimeChannel = null;
+let seenSignalIds = new Set();
 
-const state = {
-  peer:null,roomId:null,isHost:false,localStream:null,
-  cameraTrack:null,micTrack:null,screenStream:null,screenTrack:null,
-  currentVideoTrack:null,calls:new Map(),connections:new Map(),
-  remoteStreams:new Map(),remoteName:"Participante",connected:false,
-  joining:false,cameraEnabled:true,micEnabled:true,
-  qualityIndex:3,remotePeerId:null,theaterSource:"remote"
-};
+function notice(text, error = false) {
+  $("notice").textContent = text;
+  $("notice").className = "notice show" + (error ? " error" : "");
+}
+function clearNotice() { $("notice").className = "notice"; }
+function setStatus(text, online = false) {
+  $("statusText").textContent = text;
+  $("statusDot").classList.toggle("online", online);
+}
+function initials(name) {
+  return (name || "?").trim().split(/\s+/).map(x => x[0] || "").join("").slice(0,2).toUpperCase();
+}
+function escapeText(s) { return String(s ?? ""); }
+function validUsername(s) { return /^[a-zA-Z0-9_]{3,24}$/.test(s); }
+function friendId() { return activeFriend?.id || null; }
 
-state.name=localStorage.getItem("larp-name")||"Joni";
+function setAuthMode(next) {
+  mode = next;
+  $("loginTab").classList.toggle("active", mode === "login");
+  $("signupTab").classList.toggle("active", mode === "signup");
+  $("usernameWrap").classList.toggle("hidden", mode !== "signup");
+  $("usernameInput").required = mode === "signup";
+  $("authSubmit").textContent = mode === "login" ? "Entrar" : "Criar conta";
+  $("passwordInput").autocomplete = mode === "login" ? "current-password" : "new-password";
+}
+$("loginTab").addEventListener("click", () => setAuthMode("login"));
+$("signupTab").addEventListener("click", () => setAuthMode("signup"));
 
-function notice(message,error=false){
-  $("notice").textContent=message;
-  $("notice").className="notice show"+(error?" error":"");
+async function loadProfile() {
+  const { data, error } = await db.from("profiles")
+    .select("id,username,display_name,created_at")
+    .eq("id", user.id).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Seu perfil não foi criado. Confira se executou o SQL de configuração no Supabase.");
+  profile = data;
 }
-function clearNotice(){$("notice").className="notice";$("notice").textContent=""}
-function status(message,online=false){
-  $("statusText").textContent=message;
-  $("statusDot").classList.toggle("online",online);
-}
-function initials(name){
-  const p=(name||"?").trim().split(/\s+/);
-  return ((p[0]?.[0]||"?")+(p.length>1?p[p.length-1][0]:"")).toUpperCase().slice(0,2);
-}
-function updateNameUI(){
-  $("nameInput").value=state.name;
-  $("localVideoName").textContent=state.name+" (você)";
-  $("localParticipantName").textContent=state.name+" (você)";
-  $("localAvatar").textContent=initials(state.name);
-  $("localSmallAvatar").textContent=initials(state.name);
-}
-function enableControls(enabled){
-  ["micBtn","cameraBtn","screenBtn","copyInviteBtn","leaveBtn"].forEach(id=>$(id).disabled=!enabled);
-  $("chatInput").disabled=!enabled;
-  $("sendBtn").disabled=!enabled;
-}
-function inviteURL(){
-  if(!state.roomId)return "";
-  const url=new URL(location.href);
-  url.searchParams.set("room",state.roomId);
-  return url.href;
-}
-function showInvite(){
-  $("roomInfo").classList.add("visible");
-  $("inviteText").textContent=inviteURL();
-}
-async function copyInvite(){
-  const value=inviteURL();
-  if(!value)return;
-  try{
-    await navigator.clipboard.writeText(value);
-    notice("Link copiado! Envie o convite para seu amigo.");
-  }catch{
-    const input=document.createElement("textarea");
-    input.value=value;document.body.appendChild(input);input.select();
-    const ok=document.execCommand("copy");input.remove();
-    notice(ok?"Link copiado!":"Copie manualmente o link exibido na tela.",!ok);
+
+async function enterApp() {
+  user = (await db.auth.getUser()).data.user;
+  if (!user) return;
+  try {
+    await loadProfile();
+    $("authPanel").classList.add("hidden");
+    $("mainApp").classList.remove("hidden");
+    $("welcomeTitle").textContent = "Olá, " + (profile.display_name || profile.username) + "!";
+    $("profileLine").textContent = "Seu usuário: @" + profile.username;
+    setStatus("Conectado", true);
+    await loadFriends();
+    await loadRequests();
+    subscribeInbox();
+  } catch (e) {
+    notice(e.message || "Não foi possível carregar seu perfil.", true);
   }
 }
-async function acquireMedia(){
-  if(!navigator.mediaDevices?.getUserMedia)
-    throw new Error("Câmera e microfone exigem HTTPS. Abra o site publicado pelo GitHub Pages.");
 
-  try{
-    state.localStream=await navigator.mediaDevices.getUserMedia({
-      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},
-      video:{
-        width:{ideal:1920},height:{ideal:1080},
-        frameRate:{ideal:60,max:60},facingMode:"user"
+$("authForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  clearNotice();
+  const email = $("emailInput").value.trim();
+  const password = $("passwordInput").value;
+  const submit = $("authSubmit");
+  submit.disabled = true;
+  try {
+    if (mode === "signup") {
+      const username = $("usernameInput").value.trim().toLowerCase();
+      if (!validUsername(username)) {
+        throw new Error("Use de 3 a 24 caracteres: letras, números e sublinhado.");
       }
-    });
-  }catch(firstError){
-    try{
-      state.localStream=await navigator.mediaDevices.getUserMedia({
-        audio:true,video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}
+      const { data, error } = await db.auth.signUp({
+        email, password,
+        options: { data: { username, display_name: username } }
       });
-      notice("A câmera não aceitou 1080p a 60 FPS. Foi selecionada uma configuração compatível.");
-    }catch{
-      try{
-        state.localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
-        notice("Câmera indisponível. A chamada seguirá somente com áudio.");
-      }catch{
-        throw new Error("Não foi possível acessar câmera ou microfone. Confira as permissões do navegador. "+firstError.message);
+      if (error) throw error;
+      if (!data.session) {
+        notice("Conta criada! Confira seu e-mail para confirmar o cadastro e depois entre.");
+        return;
       }
+      user = data.user;
+      /* O trigger SQL cria o perfil. Atualizamos o nome escolhido. */
+      const { error: profileError } = await db.from("profiles").update({
+        username, display_name: username
+      }).eq("id", user.id);
+      if (profileError) throw profileError;
+      notice("Conta criada com sucesso!");
+      await enterApp();
+    } else {
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await enterApp();
     }
+  } catch (err) {
+    notice(err.message || "Erro ao autenticar.", true);
+  } finally {
+    submit.disabled = false;
   }
+});
 
-  state.cameraTrack=state.localStream.getVideoTracks()[0]||null;
-  state.micTrack=state.localStream.getAudioTracks()[0]||null;
-  state.currentVideoTrack=state.cameraTrack;
-  state.cameraEnabled=!!state.cameraTrack;
-  state.micEnabled=!!state.micTrack;
-  $("localVideo").srcObject=state.localStream;
-  $("localVideo").muted=true;
+$("logoutBtn").addEventListener("click", async () => {
+  await stopCall(false);
+  if (messagesChannel) await db.removeChannel(messagesChannel);
+  if (inboxChannel) await db.removeChannel(inboxChannel);
+  if (realtimeChannel) await db.removeChannel(realtimeChannel);
+  await db.auth.signOut();
+  user = null; profile = null; activeFriend = null; friends = [];
+  $("mainApp").classList.add("hidden");
+  $("authPanel").classList.remove("hidden");
+  setStatus("Desconectado");
+  notice("Você saiu da conta.");
+});
 
-  if(state.cameraTrack){
-    try{
-      await state.cameraTrack.applyConstraints({
-        width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60,max:60}
-      });
-    }catch(e){console.warn("A câmera não aceitou 1080p60:",e)}
-  }
-  refreshMedia();
-}
-function refreshMedia(){
-  const visible=!!state.currentVideoTrack&&state.currentVideoTrack.readyState==="live";
-  $("localPlaceholder").style.display=visible?"none":"flex";
-  $("localVideo").style.display=visible?"block":"none";
-  $("micBtn").classList.toggle("active",state.micEnabled);
-  $("micBtn").classList.toggle("off",!state.micEnabled);
-  $("micLabel").textContent=state.micEnabled?"Microfone ligado":"Microfone desligado";
-  $("micBtn").querySelector(".symbol").textContent=state.micEnabled?"🎙️":"🔇";
-  $("cameraBtn").classList.toggle("active",state.cameraEnabled);
-  $("cameraBtn").classList.toggle("off",!state.cameraEnabled);
-  $("cameraLabel").textContent=state.cameraEnabled?"Câmera ligada":"Câmera desligada";
-  $("cameraBtn").querySelector(".symbol").textContent=state.cameraEnabled?"📷":"🚫";
-  $("screenBtn").classList.toggle("active",!!state.screenTrack);
-  $("screenLabel").textContent=state.screenTrack?"Parar transmissão":"Compartilhar tela";
-  if(!state.cameraTrack&&!state.screenTrack)
-    $("localPlaceholder").querySelector("span").textContent="Câmera indisponível";
-  else
-    $("localPlaceholder").querySelector("span").textContent=state.screenTrack?"Compartilhando tela...":"Sua câmera está desligada";
-}
-function updateParticipants(){
-  const exists=state.remoteStreams.size>0||state.connections.size>0||state.calls.size>0;
-  $("remoteParticipant").style.display=exists?"flex":"none";
-  $("participantCount").textContent=exists?"2 / 2":"1 / 2";
-  $("remoteVideoName").textContent=state.remoteName;
-  $("remoteParticipantName").textContent=state.remoteName;
-  $("remoteAvatar").textContent=initials(state.remoteName);
-  $("remoteSmallAvatar").textContent=initials(state.remoteName);
-  $("remotePlaceholderText").textContent=exists?"Conectando áudio e vídeo...":"Esperando alguém entrar...";
-  $("remoteParticipantState").textContent=state.remoteStreams.size?"Conectado à chamada":"Conectando...";
-  $("remoteLiveTag").textContent=state.remoteStreams.size?"CONECTADO":"AGUARDANDO";
-  if(state.theaterSource==="remote"){
-    $("theaterTitle").textContent=state.remoteName;
-    $("theaterName").textContent=state.remoteName;
-    $("theaterAvatar").textContent=initials(state.remoteName);
-  }
-}
-function addMessage(name,text,mine=false){
-  $("emptyChat")?.remove();
-  const row=document.createElement("div");
-  row.className="message"+(mine?" mine":"");
-  const meta=document.createElement("div");
-  meta.className="message-meta";
-  meta.textContent=(mine?"Você":name)+" · "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-  const bubble=document.createElement("div");
-  bubble.className="bubble";bubble.textContent=text;
-  row.append(meta,bubble);$("messages").appendChild(row);
-  $("messages").scrollTop=$("messages").scrollHeight;
-}
-function sendData(data){
-  let sent=false;
-  for(const conn of state.connections.values()){
-    if(conn.open){
-      try{conn.send(data);sent=true}catch(e){console.warn(e)}
-    }
-  }
-  return sent;
-}
-function applyPresetToUI(){
-  const p=PRESETS[state.qualityIndex];
-  $("qualityLabel").textContent=p.label;
-  $("theaterQualityLabel").textContent=p.label;
-  $("qualityDown").disabled=state.qualityIndex===0;
-  $("theaterQualityDown").disabled=state.qualityIndex===0;
-  $("qualityUp").disabled=state.qualityIndex===PRESETS.length-1;
-  $("theaterQualityUp").disabled=state.qualityIndex===PRESETS.length-1;
-}
-async function applyQualityRequest(index){
-  const p=PRESETS[index];
-  if(!state.currentVideoTrack){
-    notice("Não há uma câmera ou transmissão ativa para ajustar.",true);
+async function loadFriends() {
+  const { data, error } = await db.from("friendships")
+    .select("id,requester_id,addressee_id,status")
+    .eq("status", "accepted")
+    .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+  if (error) throw error;
+  const rows = data || [];
+  const ids = [...new Set(rows.map(r => r.requester_id === user.id ? r.addressee_id : r.requester_id))];
+  if (!ids.length) {
+    friends = [];
+    renderFriends();
     return;
   }
-  try{
-    if(!state.screenTrack){
-      await state.currentVideoTrack.applyConstraints({
-        width:{ideal:p.width},height:{ideal:p.height},
-        frameRate:{ideal:p.fps,max:p.fps}
+  const { data: people, error: peopleError } = await db.from("profiles")
+    .select("id,username,display_name").in("id", ids);
+  if (peopleError) throw peopleError;
+  friends = (people || []).map(p => ({...p}));
+  renderFriends();
+}
+function renderFriends() {
+  $("friendCount").textContent = friends.length;
+  const box = $("friendsList");
+  box.innerHTML = "";
+  if (!friends.length) {
+    box.innerHTML = '<div class="empty">Você ainda não tem amigos.<br>Busque alguém pelo usuário.</div>';
+    return;
+  }
+  friends.forEach(f => {
+    const item = document.createElement("div");
+    item.className = "item";
+    const avatar = document.createElement("div");
+    avatar.className = "avatar"; avatar.textContent = initials(f.display_name || f.username);
+    const main = document.createElement("div"); main.className = "item-main";
+    const name = document.createElement("div"); name.className = "item-name"; name.textContent = f.display_name || f.username;
+    const sub = document.createElement("div"); sub.className = "item-sub"; sub.textContent = "@" + f.username;
+    main.append(name, sub);
+    const btn = document.createElement("button"); btn.className = "btn small-btn"; btn.textContent = activeFriend?.id === f.id ? "Aberto" : "Conversar";
+    btn.addEventListener("click", () => selectFriend(f));
+    item.append(avatar, main, btn); box.append(item);
+  });
+}
+async function loadRequests() {
+  const { data, error } = await db.from("friendships")
+    .select("id,requester_id,addressee_id,status")
+    .eq("addressee_id", user.id).eq("status", "pending");
+  if (error) throw error;
+  const rows = data || [];
+  $("requestCount").textContent = rows.length;
+  const box = $("requestsList"); box.innerHTML = "";
+  if (!rows.length) {
+    box.innerHTML = '<div class="empty">Nenhuma solicitação.</div>'; return;
+  }
+  const ids = rows.map(r => r.requester_id);
+  const { data: people, error: peopleError } = await db.from("profiles").select("id,username,display_name").in("id", ids);
+  if (peopleError) throw peopleError;
+  rows.forEach(r => {
+    const p = (people || []).find(x => x.id === r.requester_id);
+    if (!p) return;
+    const item = document.createElement("div"); item.className = "item";
+    const main = document.createElement("div"); main.className = "item-main";
+    const name = document.createElement("div"); name.className = "item-name"; name.textContent = p.display_name || p.username;
+    const sub = document.createElement("div"); sub.className = "item-sub"; sub.textContent = "@" + p.username;
+    main.append(name, sub);
+    const accept = document.createElement("button"); accept.className = "btn primary small-btn"; accept.textContent = "Aceitar";
+    accept.addEventListener("click", async () => {
+      const { error } = await db.from("friendships").update({status:"accepted"}).eq("id",r.id);
+      if (error) return notice(error.message, true);
+      notice("Amizade aceita!");
+      await loadRequests(); await loadFriends();
+    });
+    const decline = document.createElement("button"); decline.className = "btn small-btn"; decline.textContent = "Recusar";
+    decline.addEventListener("click", async () => {
+      const { error } = await db.from("friendships").update({status:"declined"}).eq("id",r.id);
+      if (error) return notice(error.message, true);
+      await loadRequests();
+    });
+    item.append(main, accept, decline); box.append(item);
+  });
+}
+
+$("searchForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const username = $("searchInput").value.trim().toLowerCase();
+  const box = $("searchResults"); box.innerHTML = "";
+  if (!validUsername(username)) return notice("Digite um usuário válido (3–24 caracteres).", true);
+  if (username === profile.username) return notice("Esse é o seu próprio usuário.", true);
+  try {
+    const { data: person, error } = await db.from("profiles")
+      .select("id,username,display_name").eq("username", username).maybeSingle();
+    if (error) throw error;
+    if (!person) {
+      box.innerHTML = '<div class="empty">Usuário não encontrado.</div>'; return;
+    }
+    const { data: existing, error: relError } = await db.from("friendships")
+      .select("id,status,requester_id,addressee_id")
+      .or(`and(requester_id.eq.${user.id},addressee_id.eq.${person.id}),and(requester_id.eq.${person.id},addressee_id.eq.${user.id})`);
+    if (relError) throw relError;
+    const relation = (existing || [])[0];
+    const item = document.createElement("div"); item.className = "item";
+    const avatar = document.createElement("div"); avatar.className = "avatar"; avatar.textContent = initials(person.display_name || person.username);
+    const main = document.createElement("div"); main.className = "item-main";
+    const name = document.createElement("div"); name.className = "item-name"; name.textContent = person.display_name || person.username;
+    const sub = document.createElement("div"); sub.className = "item-sub"; sub.textContent = "@" + person.username;
+    main.append(name, sub);
+    const btn = document.createElement("button"); btn.className = "btn primary small-btn";
+    if (relation?.status === "accepted") {
+      btn.textContent = "Amigos"; btn.disabled = true;
+    } else if (relation?.status === "pending") {
+      btn.textContent = relation.requester_id === user.id ? "Enviada" : "Recebida"; btn.disabled = true;
+    } else {
+      btn.textContent = "Adicionar";
+      btn.addEventListener("click", async () => {
+        const { error: addError } = await db.from("friendships").insert({
+          requester_id:user.id, addressee_id:person.id, status:"pending"
+        });
+        if (addError) return notice(addError.message, true);
+        btn.textContent = "Solicitação enviada"; btn.disabled = true;
+        notice("Solicitação de amizade enviada.");
       });
     }
-  }catch(e){
-    console.warn("O dispositivo não aceitou as restrições exatas:",e);
-  }
-
-  // Ajusta os parâmetros de envio de vídeo das conexões existentes.
-  for(const call of state.calls.values()){
-    try{
-      const pc=call.peerConnection;
-      if(!pc)continue;
-      const sender=pc.getSenders().find(s=>s.track?.kind==="video");
-      if(!sender)continue;
-      const params=sender.getParameters();
-      if(!params.encodings||!params.encodings.length)params.encodings=[{}];
-      params.encodings[0].maxBitrate=p.bitrate;
-      params.encodings[0].maxFramerate=p.fps;
-      await sender.setParameters(params);
-    }catch(e){console.warn("Não foi possível ajustar o envio:",e)}
-  }
-}
-function changeQuality(direction){
-  const next=Math.max(0,Math.min(PRESETS.length-1,state.qualityIndex+direction));
-  if(next===state.qualityIndex)return;
-  state.qualityIndex=next;
-  applyPresetToUI();
-  const preset=PRESETS[next];
-  // O pedido vai ao computador que está transmitindo, não altera só a etiqueta.
-  const sent=sendData({type:"quality",index:next});
-  if(sent){
-    notice("Solicitado "+preset.label+" ao participante que transmite.");
-  }else{
-    notice("Qualidade selecionada: "+preset.label+". O ajuste remoto será possível quando o chat conectar.");
-  }
-  // Se a própria pessoa estiver transmitindo, aplica localmente também.
-  applyQualityRequest(next);
-}
-function handleConnection(conn){
-  const old=state.connections.get(conn.peer);
-  if(old&&old!==conn)try{old.close()}catch{}
-  state.connections.set(conn.peer,conn);
-  conn.on("open",()=>{
-    conn.send({type:"name",name:state.name});
-    conn.send({type:"quality",index:state.qualityIndex});
-    updateParticipants();
-  });
-  conn.on("data",data=>{
-    if(!data||typeof data!=="object")return;
-    if(data.type==="name"&&typeof data.name==="string"){
-      state.remoteName=data.name.slice(0,32)||"Participante";
-      updateParticipants();
-    }
-    if(data.type==="chat"&&typeof data.text==="string"){
-      addMessage(state.remoteName,data.text.slice(0,1000),false);
-    }
-    if(data.type==="quality"&&Number.isInteger(data.index)){
-      const idx=Math.max(0,Math.min(PRESETS.length-1,data.index));
-      // O outro participante solicitou esta qualidade para o vídeo que enviamos.
-      applyQualityRequest(idx);
-    }
-  });
-  conn.on("close",()=>{
-    if(state.connections.get(conn.peer)===conn)state.connections.delete(conn.peer);
-    updateParticipants();
-  });
-  conn.on("error",e=>console.warn("Erro no chat",e));
-  updateParticipants();
-}
-function handleCall(call){
-  const old=state.calls.get(call.peer);
-  if(old&&old!==call)try{old.close()}catch{}
-  state.calls.set(call.peer,call);
-  state.remotePeerId=call.peer;
-  updateParticipants();
-  call.on("stream",stream=>{
-    state.remoteStreams.set(call.peer,stream);
-    $("remoteVideo").srcObject=stream;
-    $("remoteVideo").style.display="block";
-    $("remotePlaceholder").style.display="none";
-    $("remoteVideo").play().catch(()=>{});
-    if(state.theaterSource==="remote"&&$("theater").classList.contains("open")){
-      $("theaterVideo").srcObject=stream;
-      $("theaterVideo").style.display="block";
-      $("theaterPlaceholder").style.display="none";
-      $("theaterVideo").play().catch(()=>{});
-    }
-    updateParticipants();
-  });
-  call.on("close",()=>{
-    if(state.calls.get(call.peer)===call)state.calls.delete(call.peer);
-    state.remoteStreams.delete(call.peer);
-    if(!state.remoteStreams.size){
-      $("remoteVideo").srcObject=null;
-      $("remoteVideo").style.display="none";
-      $("remotePlaceholder").style.display="flex";
-      $("theaterVideo").srcObject=null;
-      $("theaterVideo").style.display="none";
-      $("theaterPlaceholder").style.display="flex";
-    }
-    updateParticipants();
-  });
-  call.on("error",e=>{
-    console.error("Erro de mídia",e);
-    notice("Falha na conexão de áudio/vídeo. Confira a rede e tente novamente.",true);
-  });
-}
-function parseRoom(raw){
-  const value=raw.trim();
-  if(!value)return "";
-  try{if(value.includes("://"))return new URL(value).searchParams.get("room")||""}catch{}
-  return value;
-}
-
-async function startRoom(roomToJoin=null){
-  if(state.joining||state.peer)return;
-  state.joining=true;clearNotice();
-  $("createBtn").disabled=true;$("joinBtn").disabled=true;
-  status("Solicitando permissões...");
-  try{
-    await acquireMedia();
-    state.isHost=!roomToJoin;
-    state.roomId=roomToJoin||null;
-
-    // Cada participante recebe seu próprio ID PeerJS.
-    // O ID da sala é usado apenas como destino da conexão.
-    const peer=new Peer(undefined,{
-      debug:1,
-      config:{iceServers:[
-        {urls:"stun:stun.l.google.com:19302"},
-        {urls:"stun:stun1.l.google.com:19302"}
-      ]}
-    });
-    state.peer=peer;
-
-    peer.on("open",id=>{
-      state.connected=true;state.joining=false;
-      if(state.isHost)state.roomId=id;
-      status("Servidor conectado",true);
-      enableControls(true);showInvite();
-      $("localParticipantState").textContent="Na chamada";
-      $("createBtn").textContent=state.isHost?"Sala criada":"Conectado";
-      $("createBtn").disabled=true;$("joinBtn").disabled=true;$("roomInput").disabled=true;
-      updateParticipants();
-      if(!state.isHost){
-        const conn=peer.connect(roomToJoin,{reliable:true,metadata:{name:state.name}});
-        handleConnection(conn);
-        const call=peer.call(roomToJoin,state.localStream,{metadata:{name:state.name}});
-        if(call)handleCall(call);
-        notice("Conectando à sala. Aguarde alguns segundos.");
-      }else{
-        notice("Sala criada. Copie o convite e envie ao seu amigo.");
-      }
-    });
-
-    peer.on("connection",handleConnection);
-    peer.on("call",call=>{
-      if(!state.localStream){call.close();return}
-      call.answer(state.localStream);
-      handleCall(call);
-    });
-    peer.on("disconnected",()=>{
-      status("Reconectando...");
-      if(state.peer&&!state.peer.destroyed){
-        try{state.peer.reconnect()}catch(e){console.warn(e)}
-      }
-    });
-    peer.on("error",err=>{
-      console.error("PeerJS error:",err);
-      state.joining=false;
-      let message="Não foi possível conectar.";
-      if(err.type==="peer-unavailable")message="Sala não encontrada. O criador precisa estar conectado e com a sala aberta.";
-      if(err.type==="network"||err.type==="server-error")message="Erro no servidor de conexão. Tente novamente.";
-      if(err.type==="browser-incompatible")message="Este navegador não é compatível.";
-      notice(message+" ("+err.type+")",true);
-      status("Erro de conexão");
-      if(!state.connected){
-        cleanupMedia();state.peer=null;
-        $("createBtn").disabled=false;$("joinBtn").disabled=false;
-      }
-    });
-  }catch(error){
-    state.joining=false;cleanupMedia();status("Desconectado");
-    notice(error.message||"Não foi possível iniciar.",true);
-    $("createBtn").disabled=false;$("joinBtn").disabled=false;
-  }
-}
-async function toggleMic(){
-  if(!state.micTrack){notice("Nenhum microfone disponível.",true);return}
-  state.micEnabled=!state.micEnabled;
-  state.micTrack.enabled=state.micEnabled;refreshMedia();
-}
-async function toggleCamera(){
-  if(!state.cameraTrack){notice("Nenhuma câmera disponível. Confira as permissões.",true);return}
-  state.cameraEnabled=!state.cameraEnabled;
-  state.cameraTrack.enabled=state.cameraEnabled;
-  if(!state.screenTrack){
-    state.currentVideoTrack=state.cameraEnabled?state.cameraTrack:null;
-    $("localVideo").srcObject=state.cameraEnabled?state.localStream:null;
-    for(const call of state.calls.values()){
-      try{
-        const sender=call.peerConnection?.getSenders().find(s=>s.track?.kind==="video");
-        if(sender)await sender.replaceTrack(state.currentVideoTrack);
-      }catch(e){console.warn(e)}
-    }
-  }
-  refreshMedia();
-}
-async function startScreen(){
-  if(!navigator.mediaDevices?.getDisplayMedia){
-    notice("Compartilhamento de tela exige um navegador atualizado e HTTPS.",true);return;
-  }
-  try{
-    const stream=await navigator.mediaDevices.getDisplayMedia({
-      video:{width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60,max:60}},
-      audio:false
-    });
-    const track=stream.getVideoTracks()[0];
-    if(!track){stream.getTracks().forEach(t=>t.stop());return}
-    state.screenStream=stream;state.screenTrack=track;state.currentVideoTrack=track;
-    try{track.contentHint="motion"}catch{}
-    $("localVideo").srcObject=stream;$("localVideo").classList.remove("mirror");
-    refreshMedia();
-    track.addEventListener("ended",stopScreen,{once:true});
-    let applied=0;
-    for(const call of state.calls.values()){
-      try{
-        const sender=call.peerConnection?.getSenders().find(s=>s.track?.kind==="video");
-        if(sender){await sender.replaceTrack(track);applied++}
-      }catch(e){console.warn(e)}
-    }
-    if(!state.calls.size)notice("Tela selecionada. Ela será transmitida quando a chamada de vídeo estiver ativa.");
-    else if(!applied)notice("A prévia está ativa, mas a troca de vídeo não foi confirmada pela conexão.",true);
-    else notice("Compartilhamento de tela iniciado.");
-  }catch(e){
-    if(e.name!=="NotAllowedError")notice("Não foi possível compartilhar a tela: "+e.message,true);
-  }
-}
-async function stopScreen(){
-  if(!state.screenTrack&&!state.screenStream)return;
-  const track=state.screenTrack,stream=state.screenStream;
-  state.screenTrack=null;state.screenStream=null;
-  state.currentVideoTrack=state.cameraEnabled?state.cameraTrack:null;
-  if(track&&track.readyState!=="ended")try{track.stop()}catch{}
-  if(stream)stream.getTracks().forEach(t=>{if(t.readyState!=="ended")t.stop()});
-  $("localVideo").classList.add("mirror");
-  $("localVideo").srcObject=state.cameraEnabled?state.localStream:null;
-  for(const call of state.calls.values()){
-    try{
-      const sender=call.peerConnection?.getSenders().find(s=>s.track?.kind==="video");
-      if(sender)await sender.replaceTrack(state.currentVideoTrack);
-    }catch(e){console.warn(e)}
-  }
-  refreshMedia();notice("Compartilhamento encerrado.");
-}
-async function toggleScreen(){if(state.screenTrack)await stopScreen();else await startScreen()}
-
-function openTheater(source){
-  state.theaterSource=source;
-  const isRemote=source==="remote";
-  const original=isRemote?$("remoteVideo"):$("localVideo");
-  const stream=original.srcObject;
-  $("theaterTitle").textContent=isRemote?state.remoteName:state.name+" (você)";
-  $("theaterName").textContent=isRemote?state.remoteName:state.name+" (você)";
-  $("theaterAvatar").textContent=initials(isRemote?state.remoteName:state.name);
-  $("theaterPlaceholderText").textContent=isRemote?"Aguardando transmissão...":"Sua câmera está desligada";
-  $("theaterVideo").srcObject=stream;
-  $("theaterVideo").muted=!isRemote;
-  $("theaterVideo").classList.toggle("mirror",!isRemote&&!state.screenTrack);
-  $("theaterVideo").style.display=stream?"block":"none";
-  $("theaterPlaceholder").style.display=stream?"none":"flex";
-  $("theater").classList.add("open");
-  document.body.classList.add("theater-open");
-  $("theaterVideo").play().catch(()=>{});
-}
-function closeTheater(){
-  $("theater").classList.remove("open");
-  document.body.classList.remove("theater-open");
-  $("theaterVideo").srcObject=null;
-}
-function cleanupMedia(){
-  if(state.screenStream)state.screenStream.getTracks().forEach(t=>{try{t.stop()}catch{}});
-  if(state.localStream)state.localStream.getTracks().forEach(t=>{try{t.stop()}catch{}});
-  state.localStream=null;state.cameraTrack=null;state.micTrack=null;
-  state.screenStream=null;state.screenTrack=null;state.currentVideoTrack=null;
-  $("localVideo").srcObject=null;$("remoteVideo").srcObject=null;$("theaterVideo").srcObject=null;
-  $("localVideo").style.display="none";$("remoteVideo").style.display="none";$("theaterVideo").style.display="none";
-  $("localPlaceholder").style.display="flex";$("remotePlaceholder").style.display="flex";$("theaterPlaceholder").style.display="flex";
-}
-function leaveRoom(){
-  closeTheater();
-  for(const call of state.calls.values())try{call.close()}catch{}
-  for(const conn of state.connections.values())try{conn.close()}catch{}
-  state.calls.clear();state.connections.clear();state.remoteStreams.clear();
-  if(state.peer)try{state.peer.destroy()}catch{}
-  state.peer=null;state.roomId=null;state.connected=false;state.joining=false;state.isHost=false;
-  state.remoteName="Participante";
-  cleanupMedia();enableControls(false);status("Desconectado");
-  $("roomInfo").classList.remove("visible");
-  $("createBtn").disabled=false;$("joinBtn").disabled=false;
-  $("createBtn").textContent="＋ Criar sala";$("roomInput").disabled=false;$("roomInput").value="";
-  $("remoteParticipant").style.display="none";$("participantCount").textContent="1 / 2";
-  $("localParticipantState").textContent="Ainda não entrou na chamada";
-  $("remoteVideoName").textContent="Participante";$("remoteLiveTag").textContent="OFFLINE";
-  $("messages").innerHTML='<div class="empty-chat" id="emptyChat">Suas mensagens aparecem aqui.<br>Entre em uma sala para conversar.</div>';
-  $("localVideo").classList.add("mirror");refreshMedia();
-  notice("Você saiu da chamada.");
-}
-
-$("createBtn").addEventListener("click",()=>startRoom());
-$("joinBtn").addEventListener("click",()=>{
-  const room=parseRoom($("roomInput").value);
-  if(!room){notice("Cole o código ou link de convite primeiro.",true);return}
-  if(room.length>180){notice("Código de sala inválido.",true);return}
-  startRoom(room);
+    item.append(avatar, main, btn); box.append(item);
+  } catch (err) { notice(err.message || "Erro ao buscar usuário.", true); }
 });
-$("roomInput").addEventListener("keydown",e=>{if(e.key==="Enter")$("joinBtn").click()});
-$("copyBtn").addEventListener("click",copyInvite);
-$("copyInviteBtn").addEventListener("click",copyInvite);
-$("micBtn").addEventListener("click",toggleMic);
-$("cameraBtn").addEventListener("click",toggleCamera);
-$("screenBtn").addEventListener("click",toggleScreen);
-$("leaveBtn").addEventListener("click",leaveRoom);
 
-$("saveNameBtn").addEventListener("click",()=>{
-  const name=$("nameInput").value.trim().slice(0,32);
-  if(!name){notice("Digite um nome antes de salvar.",true);return}
-  state.name=name;localStorage.setItem("larp-name",name);updateNameUI();
-  sendData({type:"name",name});notice("Nome atualizado.");
-});
-$("nameInput").addEventListener("keydown",e=>{if(e.key==="Enter")$("saveNameBtn").click()});
-$("chatForm").addEventListener("submit",e=>{
+async function selectFriend(friend) {
+  activeFriend = friend;
+  messageIds.clear();
+  renderFriends();
+  $("chatTitle").textContent = friend.display_name || friend.username;
+  $("chatSubtitle").textContent = "Conversa privada com @" + friend.username;
+  $("remoteLabel").textContent = friend.display_name || friend.username;
+  $("chatInput").disabled = false; $("sendBtn").disabled = false;
+  $("chatInput").placeholder = "Mensagem para @" + friend.username + "...";
+  $("messages").innerHTML = '<div class="empty">Carregando mensagens...</div>';
+  if (messagesChannel) await db.removeChannel(messagesChannel);
+  await loadMessages();
+  messagesChannel = db.channel("messages-" + [user.id, friend.id].sort().join("-"))
+    .on("postgres_changes", {
+      event: "INSERT", schema: "public", table: "direct_messages"
+    }, payload => {
+      const m = payload.new;
+      if ((m.sender_id === user.id && m.recipient_id === friend.id) ||
+          (m.sender_id === friend.id && m.recipient_id === user.id)) {
+        appendMessage(m);
+      }
+    }).subscribe();
+}
+async function loadMessages() {
+  if (!activeFriend) return;
+  const other = activeFriend.id;
+  const { data, error } = await db.from("direct_messages")
+    .select("id,sender_id,recipient_id,body,created_at")
+    .or(`and(sender_id.eq.${user.id},recipient_id.eq.${other}),and(sender_id.eq.${other},recipient_id.eq.${user.id})`)
+    .order("created_at", {ascending:true}).limit(200);
+  if (error) throw notice(error.message, true);
+  $("messages").innerHTML = "";
+  messageIds.clear();
+  if (!(data || []).length) {
+    $("messages").innerHTML = '<div class="empty">Ainda não há mensagens.<br>Envie a primeira!</div>';
+    return;
+  }
+  (data || []).forEach(appendMessage);
+}
+function appendMessage(m) {
+  if (!m || messageIds.has(m.id) || !activeFriend) return;
+  const other = activeFriend.id;
+  if (!((m.sender_id === user.id && m.recipient_id === other) ||
+        (m.sender_id === other && m.recipient_id === user.id))) return;
+  $("messages").querySelector(".empty")?.remove();
+  messageIds.add(m.id);
+  const mine = m.sender_id === user.id;
+  const row = document.createElement("div"); row.className = "message" + (mine ? " mine" : "");
+  const meta = document.createElement("div"); meta.className = "meta";
+  const time = m.created_at ? new Date(m.created_at) : new Date();
+  meta.textContent = (mine ? "Você" : (activeFriend.display_name || activeFriend.username)) + " · " +
+    time.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+  const bubble = document.createElement("div"); bubble.className = "bubble"; bubble.textContent = m.body;
+  row.append(meta, bubble); $("messages").append(row);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+$("chatForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const text=$("chatInput").value.trim();
-  if(!text||!state.connected)return;
-  if(!sendData({type:"chat",text})){
-    notice("O chat ainda não conectou ao participante. Aguarde e tente novamente.",true);return;
-  }
-  addMessage(state.name,text,true);$("chatInput").value="";
+  if (!activeFriend) return notice("Selecione um amigo primeiro.", true);
+  const body = $("chatInput").value.trim();
+  if (!body) return;
+  $("sendBtn").disabled = true;
+  try {
+    const { error } = await db.from("direct_messages").insert({
+      sender_id:user.id, recipient_id:activeFriend.id, body
+    });
+    if (error) throw error;
+    $("chatInput").value = "";
+  } catch (err) { notice(err.message || "Não foi possível enviar a mensagem.", true); }
+  finally { $("sendBtn").disabled = !activeFriend; }
+});
+$("refreshBtn").addEventListener("click", async () => {
+  try { await loadFriends(); await loadRequests(); if (activeFriend) await loadMessages(); notice("Atualizado."); }
+  catch (e) { notice(e.message, true); }
 });
 
-$("remoteCard").addEventListener("click",e=>{
-  if(e.target.closest(".quality-bar"))return;
-  openTheater("remote");
-});
-$("localCard").addEventListener("click",e=>{
-  if(e.target.closest(".quality-bar"))return;
-  openTheater("local");
-});
-$("theaterClose").addEventListener("click",closeTheater);
-$("theater").addEventListener("click",e=>{
-  if(e.target===$("theater"))closeTheater();
-});
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape")closeTheater();
-});
-$("qualityDown").addEventListener("click",e=>{e.stopPropagation();changeQuality(-1)});
-$("qualityUp").addEventListener("click",e=>{e.stopPropagation();changeQuality(1)});
-$("theaterQualityDown").addEventListener("click",()=>changeQuality(-1));
-$("theaterQualityUp").addEventListener("click",()=>changeQuality(1));
-
-updateNameUI();
-applyPresetToUI();
-$("localVideo").style.display="none";
-$("remoteVideo").style.display="none";
-$("theaterVideo").style.display="none";
-refreshMedia();
-
-const roomFromURL=new URLSearchParams(location.search).get("room");
-if(roomFromURL){
-  $("roomInput").value=roomFromURL;
-  notice("Você recebeu um convite. Confirme seu nome e clique em Entrar na sala.");
+function subscribeInbox() {
+  if (inboxChannel) db.removeChannel(inboxChannel);
+  inboxChannel = db.channel("inbox-" + user.id)
+    .on("postgres_changes", {event:"*", schema:"public", table:"friendships"}, async () => {
+      try { await loadFriends(); await loadRequests(); } catch (e) { console.warn(e); }
+    })
+    .on("postgres_changes", {event:"INSERT", schema:"public", table:"direct_messages", filter:"recipient_id=eq." + user.id}, payload => {
+      const m = payload.new;
+      if (activeFriend && m.sender_id === activeFriend.id) appendMessage(m);
+    })
+    .subscribe();
 }
+
+/* Chamadas WebRTC com sinalização no Supabase. Ambos precisam ser amigos aceitos. */
+async function sendSignal(type, payload) {
+  if (!activeFriend || !activeCallId) throw new Error("Nenhuma chamada selecionada.");
+  const { error } = await db.from("call_signals").insert({
+    sender_id:user.id, recipient_id:activeFriend.id,
+    call_id:activeCallId, signal_type:type, payload
+  });
+  if (error) throw error;
+}
+async function ensureMedia() {
+  if (localStream) return localStream;
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error("Abra o site por HTTPS para usar câmera e microfone.");
+  localStream = await navigator.mediaDevices.getUserMedia({
+    audio:{echoCancellation:true,noiseSuppression:true},
+    video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}
+  });
+  $("localVideo").srcObject = localStream;
+  $("localPlaceholder").classList.toggle("hidden", !!localStream.getVideoTracks().length);
+  micOn = true; cameraOn = !!localStream.getVideoTracks().length;
+  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  localStream.getVideoTracks().forEach(t => t.enabled = cameraOn);
+  $("micBtn").disabled = false; $("cameraBtn").disabled = false; $("screenBtn").disabled = false;
+  return localStream;
+}
+function makePeerConnection() {
+  pc = new RTCPeerConnection({iceServers:[
+    {urls:"stun:stun.l.google.com:19302"},
+    {urls:"stun:stun1.l.google.com:19302"}
+  ]});
+  remoteDescriptionSet = false;
+  pendingCandidates = [];
+  for (const track of localStream.getTracks()) {
+    const sender = pc.addTrack(track, localStream);
+    if (track.kind === "video") currentVideoSender = sender;
+    if (track.kind === "audio") currentAudioSender = sender;
+  }
+  pc.ontrack = e => {
+    const stream = e.streams[0];
+    $("remoteVideo").srcObject = stream;
+    $("remotePlaceholder").classList.add("hidden");
+    $("remoteVideo").play().catch(() => {});
+  };
+  pc.onicecandidate = e => {
+    if (e.candidate) sendSignal("ice", e.candidate.toJSON()).catch(err => console.warn(err));
+  };
+  pc.onconnectionstatechange = () => {
+    const s = pc?.connectionState;
+    $("callStatus").textContent = "Estado da chamada: " + (s || "conectando");
+    if (s === "connected") setStatus("Em chamada", true);
+    if (s === "failed") notice("Conexão falhou. Sua rede pode precisar de um servidor TURN.", true);
+    if (s === "disconnected") notice("A conexão foi interrompida; aguardando reconexão.");
+  };
+  return pc;
+}
+async function processSignal(signal) {
+  if (!signal || signal.sender_id !== activeFriend?.id) return;
+  if (signal.signal_type === "offer") {
+    if (pc) await stopCall(false);
+    activeCallId = signal.call_id; callInitiator = false;
+    await ensureMedia();
+    makePeerConnection();
+    await pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
+    remoteDescriptionSet = true;
+    for (const c of pendingCandidates) await pc.addIceCandidate(c);
+    pendingCandidates = [];
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await sendSignal("answer", pc.localDescription.toJSON());
+    $("hangupBtn").disabled = false;
+    $("callStatus").textContent = "Chamada recebida; conectando...";
+    notice("Chamada recebida. Conectando áudio e vídeo.");
+  } else if (signal.call_id === activeCallId && signal.signal_type === "answer" && pc && callInitiator) {
+    await pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
+    remoteDescriptionSet = true;
+    for (const c of pendingCandidates) await pc.addIceCandidate(c);
+    pendingCandidates = [];
+  } else if (signal.call_id === activeCallId && signal.signal_type === "ice" && pc) {
+    const candidate = new RTCIceCandidate(signal.payload);
+    if (remoteDescriptionSet) await pc.addIceCandidate(candidate);
+    else pendingCandidates.push(candidate);
+  } else if (signal.signal_type === "hangup" && signal.call_id === activeCallId) {
+    await stopCall(false);
+    notice("A outra pessoa encerrou a chamada.");
+  }
+}
+async function subscribeCallSignals() {
+  if (realtimeChannel) await db.removeChannel(realtimeChannel);
+  realtimeChannel = db.channel("call-signals-" + user.id)
+    .on("postgres_changes", {
+      event:"INSERT", schema:"public", table:"call_signals",
+      filter:"recipient_id=eq." + user.id
+    }, async payload => {
+      try { await processSignal(payload.new); }
+      catch (e) { console.error(e); notice("Erro ao estabelecer chamada: " + e.message, true); }
+    }).subscribe();
+}
+async function startCall() {
+  if (!activeFriend) return notice("Selecione um amigo antes de ligar.", true);
+  if (pc) return notice("Você já está em uma chamada.", true);
+  $("callBtn").disabled = true;
+  try {
+    await ensureMedia();
+    activeCallId = crypto.randomUUID();
+    callInitiator = true;
+    makePeerConnection();
+    await subscribeCallSignals();
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await sendSignal("offer", pc.localDescription.toJSON());
+    $("hangupBtn").disabled = false;
+    $("callStatus").textContent = "Chamando " + (activeFriend.display_name || activeFriend.username) + "...";
+    notice("Convite de chamada enviado. Aguarde a outra pessoa atender.");
+  } catch (e) {
+    notice(e.message || "Não foi possível iniciar a chamada.", true);
+    await stopCall(false);
+  } finally { $("callBtn").disabled = !activeFriend; }
+}
+async function stopCall(sendHangup = true) {
+  if (sendHangup && activeCallId && activeFriend) {
+    try { await sendSignal("hangup", {}); } catch (e) { console.warn(e); }
+  }
+  if (pc) { try { pc.close(); } catch {} }
+  pc = null; activeCallId = null; callInitiator = false;
+  currentVideoSender = null; currentAudioSender = null;
+  if (screenStream) { screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  $("localVideo").srcObject = null; $("remoteVideo").srcObject = null;
+  $("localPlaceholder").classList.remove("hidden"); $("remotePlaceholder").classList.remove("hidden");
+  $("callBtn").disabled = !activeFriend;
+  $("hangupBtn").disabled = true; $("micBtn").disabled = true; $("cameraBtn").disabled = true; $("screenBtn").disabled = true;
+  $("callStatus").textContent = "Nenhuma chamada ativa.";
+  setStatus("Conectado", true);
+}
+$("callBtn").addEventListener("click", startCall);
+$("hangupBtn").addEventListener("click", () => stopCall(true));
+$("micBtn").addEventListener("click", () => {
+  if (!localStream) return;
+  micOn = !micOn;
+  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  $("micBtn").textContent = micOn ? "🎙️ Microfone" : "🔇 Microfone desligado";
+});
+$("cameraBtn").addEventListener("click", () => {
+  if (!localStream) return;
+  cameraOn = !cameraOn;
+  localStream.getVideoTracks().forEach(t => t.enabled = cameraOn);
+  $("cameraBtn").textContent = cameraOn ? "📷 Câmera" : "🚫 Câmera desligada";
+  $("localPlaceholder").classList.toggle("hidden", cameraOn);
+});
+$("screenBtn").addEventListener("click", async () => {
+  if (!pc || !currentVideoSender) return notice("Inicie uma chamada antes de compartilhar a tela.", true);
+  try {
+    if (screenStream) {
+      const camTrack = localStream?.getVideoTracks()[0];
+      await currentVideoSender.replaceTrack(cameraOn ? camTrack : null);
+      screenStream.getTracks().forEach(t => t.stop()); screenStream = null;
+      $("localVideo").srcObject = localStream;
+      $("screenBtn").textContent = "🖥️ Compartilhar tela";
+      $("localPlaceholder").classList.toggle("hidden", cameraOn);
+    } else {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});
+      const track = screenStream.getVideoTracks()[0];
+      await currentVideoSender.replaceTrack(track);
+      $("localVideo").srcObject = screenStream;
+      $("localPlaceholder").classList.add("hidden");
+      $("screenBtn").textContent = "Parar compartilhamento";
+      track.addEventListener("ended", async () => {
+        if (!screenStream) return;
+        const camTrack = localStream?.getVideoTracks()[0];
+        if (currentVideoSender) await currentVideoSender.replaceTrack(cameraOn ? camTrack : null);
+        screenStream.getTracks().forEach(t => t.stop()); screenStream = null;
+        $("localVideo").srcObject = localStream;
+        $("screenBtn").textContent = "🖥️ Compartilhar tela";
+        $("localPlaceholder").classList.toggle("hidden", cameraOn);
+      }, {once:true});
+    }
+  } catch (e) { if (e.name !== "NotAllowedError") notice("Não foi possível compartilhar a tela: " + e.message, true); }
+});
+
+/* Inicialização e restauração de sessão */
+async function init() {
+  const { data, error } = await db.auth.getSession();
+  if (error) notice(error.message, true);
+  if (data.session) await enterApp();
+  const { data: authSub } = db.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN" && session && !profile) {
+      setTimeout(() => enterApp(), 0);
+    }
+  });
+  window.addEventListener("beforeunload", () => {
+    try { pc?.close(); } catch {}
+    try { localStream?.getTracks().forEach(t => t.stop()); } catch {}
+  });
+}
+init();
 })();
 </script>
 </body>
